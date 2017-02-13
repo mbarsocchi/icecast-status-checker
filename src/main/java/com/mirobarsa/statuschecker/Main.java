@@ -36,11 +36,12 @@ public class Main {
         }
         Checker check = new Checker(prop);
         StreamState st = new StreamState();
+        int intervall = Integer.parseInt(prop.getProperty("CHECKINTERVAL")) * 1000;
         logger.info("Starting monitor");
         while (true) {
             check.check(st);
             try {
-                Thread.sleep(3000);
+                Thread.sleep(intervall);
             } catch (InterruptedException ex) {
                 Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
             }
