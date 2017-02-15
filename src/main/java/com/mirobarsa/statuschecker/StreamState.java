@@ -38,9 +38,9 @@ public class StreamState {
     }
 
     private void logServer(SrvState state, SrvState newSrvState) {
-        if (state.equals(SrvState.SERVER_UP) && newSrvState.equals(SrvState.SERVER_DOWN)) {
+        if ((state.equals(SrvState.SERVER_UP) || state.equals(SrvState.STARTING)) && newSrvState.equals(SrvState.SERVER_DOWN)) {
             logger.info("Server is down");
-        } else if (state.equals(SrvState.SERVER_DOWN) && newSrvState.equals(SrvState.SERVER_UP)) {
+        } else if ((state.equals(SrvState.SERVER_DOWN) || state.equals(SrvState.STARTING)) && newSrvState.equals(SrvState.SERVER_UP)) {
             logger.info("Server is up");
         }
     }
@@ -52,6 +52,9 @@ public class StreamState {
     public void setStreamState(StrmState newStreamState) {
         logStream(streamState, newStreamState);
         this.streamState = newStreamState;
+        if (newStreamState.equals(StrmState.STREAM_UP)) {
+            setSrvState(SrvState.SERVER_UP);
+        }
     }
 
     public SrvState getSrvState() {

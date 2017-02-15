@@ -18,8 +18,11 @@ class Checker {
     private final UrlStatus stream;
     private final UrlStatus server;
     private final Executer exe;
+    private int retryNumber;
+    private static final int MAX_RETRY = 3;
 
     public Checker(Properties prop) {
+        this.retryNumber = 1;
         this.streamUrl = prop.getProperty("STREAM");
         this.proc = prop.getProperty("BUTTPATH");
         this.stream = new UrlStatus(prop.getProperty("SERVERURL") + "/" + prop.getProperty("STATUS"));
@@ -32,23 +35,33 @@ class Checker {
             st.setStreamState(StreamState.StrmState.STREAM_DOWN);
             if (server.isServerUp()) {
                 st.setSrvState(StreamState.SrvState.SERVER_UP);
-                try {
-                    if (Butt.getIstance().getButtProc() != null && Butt.getIstance().getButtProc().isAlive()) {
-                        if (stream.isStreamDown(streamUrl)) {
-                            logger.info("Uccido butt");
-                            Butt.getIstance().getButtProc().destroyForcibly().waitFor();
+                if (retryNumber > MAX_RETRY || st.getStreamState().equals(StreamState.StrmState.STARTING)) {
+                    try {
+                        if (Butt.getIstance().getButtProc() != null && Butt.getIstance().getButtProc().isAlive()) {
+                            if (stream.isStreamDown(streamUrl)) {
+                                logger.info("Restart butt");
+                                Butt.getIstance().getButtProc().destroyForcibly().waitFor();
+                                Butt.getIstance().setButtProc(exe.execute(proc));
+                            } else {
+                                retryNumber = 0;
+                                st.setStreamState(StreamState.StrmState.STREAM_UP);
+                            }
+                        } else {
+                            logger.info("Start butt");
+                            Butt.getIstance().setButtProc(exe.execute(proc));
                         }
+                    } catch (IOException | InterruptedException ex) {
+                        logger.error(ex);
                     }
-                    logger.info("Lancio butt");
-                    Butt.getIstance().setButtProc(exe.execute(proc));
-                } catch (IOException | InterruptedException ex) {
-                    logger.error(ex);
+                } else {
+                    logger.info("Stream Down. Tentativo numero " + retryNumber);
+                    retryNumber++;
                 }
             } else {
                 st.setSrvState(StreamState.SrvState.SERVER_DOWN);
             }
         } else {
-            st.setSrvState(StreamState.SrvState.SERVER_UP);
+            retryNumber = 0;
             st.setStreamState(StreamState.StrmState.STREAM_UP);
         }
     }

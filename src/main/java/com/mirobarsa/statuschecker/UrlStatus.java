@@ -71,8 +71,12 @@ public class UrlStatus {
                 if (streamUrlReceived != null && streamUrl.equals(streamUrlReceived)) {
                     result = false;
                 }
+            } else {
+                logger.debug("Json response object nullo. La risposta è [" + response + "]");
             }
-        } catch (JSONException | IOException ex) {}
+        } catch (JSONException | IOException ex) {
+            logger.error("[" + this.url + "] " + ex);
+        }
         return result;
     }
 
@@ -86,7 +90,7 @@ public class UrlStatus {
             responseCode = connection.getResponseCode();
             result = responseCode == HttpURLConnection.HTTP_OK;
         } catch (IOException ex) {
-            logger.debug("Response code[" + responseCode + "]" + ex);
+            logger.error("[" + this.url + "] Response code[" + responseCode + "]" + ex);
         }
 
         return result;
