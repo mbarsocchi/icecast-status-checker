@@ -19,15 +19,20 @@ class Checker {
     private final UrlStatus server;
     private final Executer exe;
     private int retryNumber;
-    private static final int MAX_RETRY = 3;
+    private int maxRetry;
     private final UrlStatus internet;
     private final String internetUrl;
 
     public Checker(Properties prop) {
-        this.retryNumber = 1;
+        this.retryNumber = 0;
         this.streamUrl = prop.getProperty("STREAM");
         this.proc = prop.getProperty("BUTTPATH");
         this.internetUrl = prop.getProperty("INTERNETOK");
+        if (prop.getProperty("MAX_RETRY") != null) {
+            maxRetry = Integer.parseInt(prop.getProperty("MAX_RETRY"));
+        } else {
+            maxRetry = 3;
+        }
         this.stream = new UrlStatus(prop.getProperty("SERVERURL") + "/" + prop.getProperty("STATUS"));
         this.server = new UrlStatus(prop.getProperty("SERVERURL"));
         this.internet = new UrlStatus(internetUrl);
@@ -39,7 +44,7 @@ class Checker {
             st.setStreamState(StreamState.StrmState.STREAM_DOWN);
             if (server.isUrlstateOk()) {
                 st.setSrvState(StreamState.SrvState.SERVER_UP);
-                if (retryNumber > MAX_RETRY || st.getStreamState().equals(StreamState.StrmState.STARTING)) {
+                if (retryNumber >= maxRetry || st.getStreamState().equals(StreamState.StrmState.STARTING)) {
                     try {
                         if (Butt.getIstance().getButtProc() != null && Butt.getIstance().getButtProc().isAlive()) {
                             if (stream.isStreamDown(streamUrl)) {
