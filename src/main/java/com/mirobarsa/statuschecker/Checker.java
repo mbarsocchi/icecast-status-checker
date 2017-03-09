@@ -20,20 +20,24 @@ class Checker {
     private final Executer exe;
     private int retryNumber;
     private static final int MAX_RETRY = 3;
+    private final UrlStatus internet;
+    private final String internetUrl;
 
     public Checker(Properties prop) {
         this.retryNumber = 1;
         this.streamUrl = prop.getProperty("STREAM");
         this.proc = prop.getProperty("BUTTPATH");
+        this.internetUrl = prop.getProperty("INTERNETOK");
         this.stream = new UrlStatus(prop.getProperty("SERVERURL") + "/" + prop.getProperty("STATUS"));
         this.server = new UrlStatus(prop.getProperty("SERVERURL"));
+        this.internet = new UrlStatus(internetUrl);
         this.exe = new Executer();
     }
 
     public void check(StreamState st) {
         if (stream.isStreamDown(streamUrl)) {
             st.setStreamState(StreamState.StrmState.STREAM_DOWN);
-            if (server.isServerUp()) {
+            if (server.isUrlstateOk()) {
                 st.setSrvState(StreamState.SrvState.SERVER_UP);
                 if (retryNumber > MAX_RETRY || st.getStreamState().equals(StreamState.StrmState.STARTING)) {
                     try {
@@ -59,6 +63,11 @@ class Checker {
                 }
             } else {
                 st.setSrvState(StreamState.SrvState.SERVER_DOWN);
+                if (!internet.isUrlstateOk()) {
+                    logger.info("Errore di connessione internet");
+                } else {
+                    logger.info("Internet OK, url [" + internetUrl + "] response is 200");
+                }
             }
         } else {
             retryNumber = 0;

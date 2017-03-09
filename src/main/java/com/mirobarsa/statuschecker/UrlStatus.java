@@ -80,7 +80,7 @@ public class UrlStatus {
         return result;
     }
 
-    public boolean isServerUp() {
+    public boolean isUrlstateOk() {
         HttpURLConnection connection;
         int responseCode = -1;
         Boolean result = false;
