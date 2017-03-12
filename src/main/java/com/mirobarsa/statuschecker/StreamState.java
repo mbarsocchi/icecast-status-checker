@@ -27,20 +27,20 @@ public class StreamState {
         SERVER_DOWN;
     }
 
-    private void logStream(StrmState state, StrmState newState) {
-        if ((state.equals(StrmState.STREAM_UP) || state.equals(StrmState.STARTING))
+    private void logStream(StrmState newState) {
+        if ((streamState.equals(StrmState.STREAM_UP) || streamState.equals(StrmState.STARTING))
                 && newState.equals(StrmState.STREAM_DOWN)) {
             logger.info("Stream is down");
-        } else if ((state.equals(StrmState.STREAM_DOWN) || state.equals(StrmState.STARTING))
+        } else if ((streamState.equals(StrmState.STREAM_DOWN) || streamState.equals(StrmState.STARTING))
                 && newState.equals(StrmState.STREAM_UP)) {
             logger.info("Stream is up");
         }
     }
 
-    private void logServer(SrvState state, SrvState newSrvState) {
-        if ((state.equals(SrvState.SERVER_UP) || state.equals(SrvState.STARTING)) && newSrvState.equals(SrvState.SERVER_DOWN)) {
+    private void logServer(SrvState newSrvState) {
+        if ((srvState.equals(SrvState.SERVER_UP) || srvState.equals(SrvState.STARTING)) && newSrvState.equals(SrvState.SERVER_DOWN)) {
             logger.info("Server is down");
-        } else if ((state.equals(SrvState.SERVER_DOWN) || state.equals(SrvState.STARTING)) && newSrvState.equals(SrvState.SERVER_UP)) {
+        } else if ((srvState.equals(SrvState.SERVER_DOWN) || srvState.equals(SrvState.STARTING)) && newSrvState.equals(SrvState.SERVER_UP)) {
             logger.info("Server is up");
         }
     }
@@ -50,7 +50,7 @@ public class StreamState {
     }
 
     public void setStreamState(StrmState newStreamState) {
-        logStream(streamState, newStreamState);
+        logStream(newStreamState);
         this.streamState = newStreamState;
         if (newStreamState.equals(StrmState.STREAM_UP)) {
             setSrvState(SrvState.SERVER_UP);
@@ -62,7 +62,7 @@ public class StreamState {
     }
 
     public void setSrvState(SrvState newSrvState) {
-        logServer(srvState, newSrvState);
+        logServer(newSrvState);
         this.srvState = newSrvState;
     }
 

@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import org.apache.log4j.Logger;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -16,7 +17,7 @@ import org.json.JSONObject;
  */
 public class UrlStatus {
 
-    static final org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(Checker.class.getName());
+    static final Logger logger = Logger.getLogger(UrlStatus.class.getName());
 
     private boolean downStatus;
     private String url;
@@ -75,7 +76,6 @@ public class UrlStatus {
                 logger.debug("Json response object nullo. La risposta è [" + response + "]");
             }
         } catch (JSONException | IOException ex) {
-            logger.error("[" + this.url + "] " + ex);
         }
         return result;
     }
@@ -90,10 +90,36 @@ public class UrlStatus {
             responseCode = connection.getResponseCode();
             result = responseCode == HttpURLConnection.HTTP_OK;
         } catch (IOException ex) {
-            logger.error("[" + this.url + "] Response code[" + responseCode + "]" + ex);
         }
 
         return result;
+    }
+
+    public String traceRoute(Executer exe) {
+        StringBuilder stringBuilder = new StringBuilder();
+        Process p;
+        String command = "";
+        try {
+            URL u = new URL(this.url);
+            if (exe.isWindows()) {
+                command = "tracert " + u.getHost();
+            } else {
+                command = "traceroute " + u.getHost();
+                command += u.getPort() == -1 ? "" : " -p " + u.getPort();
+            }
+
+            p = exe.execute(command);
+            logger.info(command);
+            BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String inputLine;
+            while ((inputLine = in.readLine()) != null) {
+                stringBuilder.append(inputLine).append("\n");
+            }
+            in.close();
+        } catch (IOException ex) {
+            logger.error("[" + this.url + "] " + ex);
+        }
+        return stringBuilder.toString();
     }
 
 }

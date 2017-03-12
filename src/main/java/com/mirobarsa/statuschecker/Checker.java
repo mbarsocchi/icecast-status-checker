@@ -14,37 +14,29 @@ class Checker {
     static final Logger logger = Logger.getLogger(Checker.class.getName());
 
     private final String streamUrl;
-    private final String proc;
-    private final UrlStatus stream;
-    private final UrlStatus server;
+    private final Stream stream;
     private final Executer exe;
+    private final String proc;
     private int retryNumber;
-    private int maxRetry;
-    private final UrlStatus internet;
-    private final String internetUrl;
+    private final int maxRetry;
 
     public Checker(Properties prop) {
         this.retryNumber = 0;
+        this.exe = new Executer();
+        this.stream = new Stream(prop.getProperty("STREAM"),prop.getProperty("SERVERURL"), prop.getProperty("STATUS"),prop.getProperty("INTERNETOK"));
         this.streamUrl = prop.getProperty("STREAM");
         this.proc = prop.getProperty("BUTTPATH");
-        this.internetUrl = prop.getProperty("INTERNETOK");
         if (prop.getProperty("MAX_RETRY") != null) {
             maxRetry = Integer.parseInt(prop.getProperty("MAX_RETRY"));
         } else {
             maxRetry = 3;
         }
-        this.stream = new UrlStatus(prop.getProperty("SERVERURL") + "/" + prop.getProperty("STATUS"));
-        this.server = new UrlStatus(prop.getProperty("SERVERURL"));
-        this.internet = new UrlStatus(internetUrl);
-        this.exe = new Executer();
     }
 
-    public void check(StreamState st) {
+    public void check() {
         if (stream.isStreamDown(streamUrl)) {
-            st.setStreamState(StreamState.StrmState.STREAM_DOWN);
-            if (server.isUrlstateOk()) {
-                st.setSrvState(StreamState.SrvState.SERVER_UP);
-                if (retryNumber >= maxRetry || st.getStreamState().equals(StreamState.StrmState.STARTING)) {
+            if (stream.isServerUrlOk()) {
+                if (retryNumber >= maxRetry || stream.getStreamState().equals(StreamState.StrmState.STARTING)) {
                     try {
                         if (Butt.getIstance().getButtProc() != null && Butt.getIstance().getButtProc().isAlive()) {
                             if (stream.isStreamDown(streamUrl)) {
@@ -53,7 +45,7 @@ class Checker {
                                 Butt.getIstance().setButtProc(exe.execute(proc));
                             } else {
                                 retryNumber = 0;
-                                st.setStreamState(StreamState.StrmState.STREAM_UP);
+                                stream.setStreamState(StreamState.StrmState.STREAM_UP);
                             }
                         } else {
                             logger.info("Start butt");
@@ -67,16 +59,10 @@ class Checker {
                     retryNumber++;
                 }
             } else {
-                st.setSrvState(StreamState.SrvState.SERVER_DOWN);
-                if (!internet.isUrlstateOk()) {
-                    logger.info("Errore di connessione internet");
-                } else {
-                    logger.info("Internet OK, url [" + internetUrl + "] response is 200");
-                }
+                stream.checkTraceRoute(exe);
             }
         } else {
             retryNumber = 0;
-            st.setStreamState(StreamState.StrmState.STREAM_UP);
         }
     }
 
