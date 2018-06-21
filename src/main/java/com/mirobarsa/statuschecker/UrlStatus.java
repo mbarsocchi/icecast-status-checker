@@ -6,8 +6,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import org.apache.log4j.Logger;
 
+import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -105,7 +105,7 @@ public class UrlStatus {
                 command = "tracert " + u.getHost();
             } else {
                 command = "traceroute " + u.getHost();
-                command += u.getPort() == -1 ? "" : " -p " + u.getPort();
+//                command += u.getPort() == -1 ? "" : " -p " + u.getPort();
             }
 
             p = exe.execute(command);
